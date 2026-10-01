@@ -219,3 +219,6 @@ __marimo__/
 
 # IDE settings
 .idea/
+
+# Test PDF files
+test_data/pdf/*.pdf
