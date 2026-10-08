@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pdf_agent.pdf_reader import PDFReader
+from pdf_agent.mock_llm_client import MockLLMClient
 from pdf_agent.llm_client import LLMClient
 from pdf_agent.tool_registry import ToolRegistry
 from pdf_agent.tools import (
@@ -23,17 +23,20 @@ class AgentResult:
 
 
 class PDFAgent:
-    def __init__(self, file_path: str):
+    def __init__(
+            self,
+            file_path: str,
+            llm: LLMClient | None = None,
+    ):
         self.file_path = file_path
 
-        # 创建 PDF Agent 可使用的 Tools
         self.registry = ToolRegistry([
             create_get_page_count_tool(file_path),
             create_search_pdf_tool(file_path),
         ])
 
-        # 创建 LLM Client
-        self.llm = LLMClient()
+        # 允许外部传入 LLM，未指定时使用 Mock LLM
+        self.llm = llm or MockLLMClient()
 
     def run(self, question: str) -> AgentResult:
         # 将用户问题交给 LLM，由 LLM 决定调用哪个 Tool

@@ -13,7 +13,8 @@ authors = [
     { name = "WU SENYU" }
 ]
 dependencies = [
-    "pymupdf>=1.24"
+    "pymupdf>=1.24",
+    "openai>=1.0",
 ]
 
 [project.optional-dependencies]

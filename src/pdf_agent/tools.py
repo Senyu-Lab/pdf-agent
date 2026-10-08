@@ -19,14 +19,12 @@ class Tool:
     function: Callable[..., Any]
 
     def to_schema(self) -> dict[str, Any]:
-        # 将 Tool 转换为 LLM Tool Calling 使用的 Schema
+        # 将 Tool 转换为 OpenAI Responses API 使用的 Schema
         return {
             "type": "function",
-            "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": self.parameters,
-            },
+            "name": self.name,
+            "description": self.description,
+            "parameters": self.parameters,
         }
 
 def create_get_page_count_tool(file_path: str) -> Tool:
