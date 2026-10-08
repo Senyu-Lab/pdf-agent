@@ -2,6 +2,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from pdf_agent.pdf_reader import PDFReader
+from pdf_agent.llm_client import LLMClient
+from pdf_agent.tool_registry import ToolRegistry
+from pdf_agent.tools import (
+    create_get_page_count_tool,
+    create_search_pdf_tool,
+)
 
 
 @dataclass
@@ -20,18 +26,47 @@ class PDFAgent:
     def __init__(self, file_path: str):
         self.file_path = file_path
 
+        # 创建 PDF Agent 可使用的 Tools
+        self.registry = ToolRegistry([
+            create_get_page_count_tool(file_path),
+            create_search_pdf_tool(file_path),
+        ])
+
+        # 创建 LLM Client
+        self.llm = LLMClient()
+
     def run(self, question: str) -> AgentResult:
-        # 创建 PDF 阅读工具
-        reader = PDFReader(self.file_path)
+        # 将用户问题交给 LLM，由 LLM 决定调用哪个 Tool
+        tool_call = self.llm.chat(
+            messages=[
+                {
+                    "role": "user",
+                    "content": question,
+                }
+            ],
+            tools=self.registry.get_schemas(),
+        )
 
-        # 第一版 Agent 只处理 PDF 页数查询
-        if "多少页" in question or "几页" in question:
-            page_count = reader.get_page_count()
+        # 根据 LLM 返回的 Tool 名称找到对应 Tool
+        tool = self.registry.get(tool_call.tool_name)
 
-            return AgentResult(
-                answer=f"这个 PDF 一共有 {page_count} 页。",
-                tool_name="get_page_count",
-                tool_result=page_count,
-            )
+        # 执行 Tool，并传入 LLM 提供的参数
+        tool_result = tool.function(**tool_call.arguments)
 
-        raise ValueError("Unsupported question.")
+        # 将 Tool Result 交给 LLM 生成最终回答
+        answer = self.llm.generate_answer(
+            messages=[
+                {
+                    "role": "user",
+                    "content": question,
+                }
+            ],
+            tool_name=tool_call.tool_name,
+            tool_result=tool_result,
+        )
+
+        return AgentResult(
+            answer=answer,
+            tool_name=tool_call.tool_name,
+            tool_result=tool_result,
+        )

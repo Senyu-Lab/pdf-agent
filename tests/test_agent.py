@@ -7,6 +7,7 @@ from pdf_agent.tools import (
     create_search_pdf_tool,
 )
 from pdf_agent.tool_registry import ToolRegistry
+from pdf_agent.llm_client import LLMClient, ToolCall
 
 
 def test_agent_can_get_page_count(tmp_path):
@@ -158,3 +159,86 @@ def test_tool_to_schema():
     assert schema["function"]["name"] == "example_tool"
     assert schema["function"]["description"] == "An example tool."
     assert schema["function"]["parameters"] == tool.parameters
+
+def test_llm_client_returns_tool_call():
+    client = LLMClient()
+
+    result = client.chat(
+        messages=[
+            {
+                "role": "user",
+                "content": "这个 PDF 有多少页？",
+            }
+        ],
+        tools=[],
+    )
+
+    assert isinstance(result, ToolCall)
+    assert result.tool_name == "get_page_count"
+    assert result.arguments == {}
+
+def test_llm_client_selects_search_tool():
+    client = LLMClient()
+
+    result = client.chat(
+        messages=[
+            {
+                "role": "user",
+                "content": "PDF 里面有没有 Python？",
+            }
+        ],
+        tools=[],
+    )
+
+    assert isinstance(result, ToolCall)
+    assert result.tool_name == "search_pdf"
+    assert result.arguments == {
+        "keyword": "Python",
+    }
+def test_llm_client_generates_final_answer():
+    client = LLMClient()
+
+    result = client.generate_answer(
+        messages=[
+            {
+                "role": "user",
+                "content": "这个 PDF 有多少页？",
+            }
+        ],
+        tool_name="get_page_count",
+        tool_result=2,
+    )
+
+    assert result == "这个 PDF 一共有 2 页。"
+
+def test_agent_can_search_pdf(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建一个包含关键词的测试 PDF
+    document = fitz.open()
+
+    page = document.new_page()
+    page.insert_text(
+        (72, 72),
+        "Python is a programming language.",
+    )
+
+    page = document.new_page()
+    page.insert_text(
+        (72, 72),
+        "Machine learning is an important field.",
+    )
+
+    document.save(pdf_path)
+    document.close()
+
+    agent = PDFAgent(pdf_path)
+
+    result = agent.run("PDF 里面有没有 Python？")
+
+    assert isinstance(result, AgentResult)
+    assert result.tool_name == "search_pdf"
+    assert len(result.tool_result) == 1
+    assert result.tool_result[0].page_number == 1
+    assert "Python" in result.tool_result[0].text
+    assert result.answer == "在第 1 页找到了相关内容。"
