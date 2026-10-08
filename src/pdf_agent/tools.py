@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, Callable
 from pdf_agent.pdf_reader import PDFReader
+from pdf_agent.pdf_search import PDFSearch
+
 
 @dataclass
 class Tool:
@@ -29,4 +31,23 @@ def create_get_page_count_tool(file_path: str) -> Tool:
             "required": [],
         },
         function=reader.get_page_count,
+    )
+
+def create_search_pdf_tool(file_path: str) -> Tool:
+    search = PDFSearch(file_path)
+
+    return Tool(
+        name="search_pdf",
+        description="Search for a keyword in the PDF and return matching pages.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "keyword": {
+                    "type": "string",
+                    "description": "The keyword to search for in the PDF.",
+                }
+            },
+            "required": ["keyword"],
+        },
+        function=search.search,
     )
