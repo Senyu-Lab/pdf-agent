@@ -115,3 +115,46 @@ def test_tool_registry():
     assert registry.get("get_page_count") is page_count_tool
     assert registry.get("search_pdf") is search_tool
     assert len(registry.list_tools()) == 2
+
+def test_tool_registry_get_schemas():
+    tool = Tool(
+        name="example_tool",
+        description="An example tool.",
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+        function=lambda: "result",
+    )
+
+    registry = ToolRegistry([tool])
+
+    schemas = registry.get_schemas()
+
+    assert len(schemas) == 1
+    assert schemas[0]["type"] == "function"
+    assert schemas[0]["function"]["name"] == "example_tool"
+
+def test_tool_to_schema():
+    tool = Tool(
+        name="example_tool",
+        description="An example tool.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "value": {
+                    "type": "string",
+                }
+            },
+            "required": ["value"],
+        },
+        function=lambda value: value,
+    )
+
+    schema = tool.to_schema()
+
+    assert schema["type"] == "function"
+    assert schema["function"]["name"] == "example_tool"
+    assert schema["function"]["description"] == "An example tool."
+    assert schema["function"]["parameters"] == tool.parameters

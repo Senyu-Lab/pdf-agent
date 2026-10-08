@@ -23,3 +23,10 @@ class ToolRegistry:
 
     def list_tools(self) -> list[Tool]:
         return list(self._tools.values())
+
+    def get_schemas(self) -> list[dict]:
+        # 将所有已注册 Tool 转换为 LLM Tool Schema
+        return [
+            tool.to_schema()
+            for tool in self._tools.values()
+        ]
