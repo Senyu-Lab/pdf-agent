@@ -3,6 +3,7 @@ import fitz
 from pdf_agent.agent import AgentResult, PDFAgent
 from pdf_agent.tools import (
     Tool,
+    ToolRegistry,
     create_get_page_count_tool,
     create_search_pdf_tool,
 )
@@ -78,3 +79,39 @@ def test_search_pdf_tool(tmp_path):
     assert len(results) == 1
     assert results[0].page_number == 1
     assert "Python" in results[0].text
+
+def test_tool_registry():
+    page_count_tool = Tool(
+        name="get_page_count",
+        description="Get the total number of pages in the PDF.",
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+        function=lambda: 10,
+    )
+
+    search_tool = Tool(
+        name="search_pdf",
+        description="Search for a keyword in the PDF.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "keyword": {
+                    "type": "string",
+                }
+            },
+            "required": ["keyword"],
+        },
+        function=lambda keyword: keyword,
+    )
+
+    registry = ToolRegistry([
+        page_count_tool,
+        search_tool,
+    ])
+
+    assert registry.get("get_page_count") is page_count_tool
+    assert registry.get("search_pdf") is search_tool
+    assert len(registry.list_tools()) == 2
