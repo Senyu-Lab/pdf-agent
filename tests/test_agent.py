@@ -3,10 +3,10 @@ import fitz
 from pdf_agent.agent import AgentResult, PDFAgent
 from pdf_agent.tools import (
     Tool,
-    ToolRegistry,
     create_get_page_count_tool,
     create_search_pdf_tool,
 )
+from pdf_agent.tool_registry import ToolRegistry
 
 
 def test_agent_can_get_page_count(tmp_path):
