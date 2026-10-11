@@ -275,8 +275,56 @@ def test_tool_registry_get_schemas():
 
     schemas = registry.get_schemas()
 
+
     assert len(schemas) == 1
     assert schemas[0]["type"] == "function"
     assert schemas[0]["name"] == "test_tool"
     assert schemas[0]["description"] == "A test tool."
     assert schemas[0]["parameters"]["type"] == "object"
+
+
+def test_tool_to_chat_schema():
+    tool = Tool(
+        name="search_pdf",
+        description="Search for a keyword in the PDF.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "keyword": {
+                    "type": "string",
+                }
+            },
+            "required": ["keyword"],
+        },
+        function=lambda keyword: keyword,
+    )
+
+    schema = tool.to_chat_schema()
+
+    assert schema["type"] == "function"
+    assert schema["function"]["name"] == "search_pdf"
+    assert schema["function"]["description"] == (
+        "Search for a keyword in the PDF."
+    )
+    assert schema["function"]["parameters"]["type"] == "object"
+    assert "keyword" in schema["function"]["parameters"]["properties"]
+
+
+def test_tool_registry_get_chat_schemas():
+    tool = Tool(
+        name="test_tool",
+        description="A test tool.",
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+        function=lambda: "result",
+    )
+
+    registry = ToolRegistry([tool])
+
+    schemas = registry.get_chat_schemas()
+
+    assert schemas[0]["type"] == "function"
+    assert schemas[0]["function"]["name"] == "test_tool"

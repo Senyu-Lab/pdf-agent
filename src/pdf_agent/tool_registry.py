@@ -30,3 +30,10 @@ class ToolRegistry:
             tool.to_schema()
             for tool in self._tools.values()
         ]
+
+    def get_chat_schemas(self) -> list[dict]:
+        # 将所有已注册 Tool 转换为 Chat Completions 使用的 Schema
+        return [
+            tool.to_chat_schema()
+            for tool in self._tools.values()
+        ]

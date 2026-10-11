@@ -27,6 +27,17 @@ class Tool:
             "parameters": self.parameters,
         }
 
+    def to_chat_schema(self) -> dict[str, Any]:
+        # 将 Tool 转换为 OpenAI Chat Completions 和 Groq 使用的 Schema
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
+        }
+
 def create_get_page_count_tool(file_path: str) -> Tool:
     reader = PDFReader(file_path)
 
@@ -40,6 +51,7 @@ def create_get_page_count_tool(file_path: str) -> Tool:
         },
         function=reader.get_page_count,
     )
+
 
 def create_search_pdf_tool(file_path: str) -> Tool:
     search = PDFSearch(file_path)
