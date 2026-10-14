@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Callable
-from pdf_agent.pdf_reader import PDFReader
-from pdf_agent.pdf_search import PDFSearch
+from pdf_agent.capabilities.pdf.reader import PDFReader
+from pdf_agent.capabilities.pdf.search import PDFSearch
 
 
 @dataclass

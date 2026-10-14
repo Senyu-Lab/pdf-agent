@@ -1,3 +1,4 @@
+
 from pathlib import Path
 
 import fitz
@@ -17,10 +18,14 @@ class PDFReader:
 
     def _open_document(self) -> fitz.Document:
         if not self.file_path.exists():
-            raise FileNotFoundError(f"PDF file not found: {self.file_path}")
+            raise FileNotFoundError(
+                f"PDF file not found: {self.file_path}"
+            )
 
         if not self.file_path.is_file():
-            raise PDFReaderError(f"Path is not a file: {self.file_path}")
+            raise PDFReaderError(
+                f"Path is not a file: {self.file_path}"
+            )
 
         try:
             return fitz.open(self.file_path)
@@ -34,7 +39,9 @@ class PDFReader:
             return document.page_count
 
     def read_page_text(self, page_number: int) -> str:
-        if isinstance(page_number, bool) or not isinstance(page_number, int):
+        if isinstance(page_number, bool) or not isinstance(
+            page_number, int
+        ):
             raise TypeError("Page number must be an integer.")
 
         with self._open_document() as document:

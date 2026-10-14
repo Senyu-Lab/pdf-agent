@@ -1,7 +1,7 @@
 import fitz
 import pytest
 
-from pdf_agent.pdf_search import PDFSearch, SearchResult
+from pdf_agent.capabilities.pdf.search import PDFSearch, SearchResult
 
 
 @pytest.fixture

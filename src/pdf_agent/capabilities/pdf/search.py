@@ -1,6 +1,7 @@
+
 from dataclasses import dataclass
 
-from pdf_agent.pdf_reader import PDFReader
+from pdf_agent.capabilities.pdf.reader import PDFReader
 
 
 @dataclass
@@ -22,7 +23,9 @@ class PDFSearch:
 
         results = []
 
-        for page_number in range(1, self.reader.get_page_count() + 1):
+        for page_number in range(
+            1, self.reader.get_page_count() + 1
+        ):
             text = self.reader.read_page_text(page_number)
 
             if keyword.casefold() in text.casefold():
