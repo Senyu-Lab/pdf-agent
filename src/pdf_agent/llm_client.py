@@ -15,6 +15,8 @@ class ToolCall:
 
 
 class LLMClient:
+    tool_schema_format = "responses"
+
     def __init__(self):
         # OpenAI SDK 会自动读取 OPENAI_API_KEY 环境变量
         self.client = OpenAI()

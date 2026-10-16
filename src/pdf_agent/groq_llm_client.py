@@ -8,9 +8,12 @@ from pdf_agent.llm_client import ToolCall
 
 
 class GroqLLMClient:
+    # Groq Chat Completions API 使用的 Tool Schema 格式
+    tool_schema_format = "chat_completions"
+
     def __init__(
-        self,
-        model: str = "openai/gpt-oss-20b",
+            self,
+            model: str = "openai/gpt-oss-20b",
     ):
         # Groq SDK 会自动读取 GROQ_API_KEY 环境变量
         self.client = Groq()

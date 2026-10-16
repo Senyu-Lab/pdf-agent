@@ -40,6 +40,12 @@ class PDFAgent:
 
     def run(self, question: str) -> AgentResult:
         # 将用户问题交给 LLM，由 LLM 决定调用哪个 Tool
+        # 根据 LLM 声明的格式选择对应的 Tool Schema
+        if self.llm.tool_schema_format == "chat_completions":
+            tool_schemas = self.registry.get_chat_schemas()
+        else:
+            tool_schemas = self.registry.get_schemas()
+
         tool_call = self.llm.chat(
             messages=[
                 {
@@ -47,7 +53,7 @@ class PDFAgent:
                     "content": question,
                 }
             ],
-            tools=self.registry.get_schemas(),
+            tools=tool_schemas,
         )
 
         # 根据 LLM 返回的 Tool 名称找到对应 Tool
