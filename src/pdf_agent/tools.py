@@ -72,3 +72,28 @@ def create_search_pdf_tool(file_path: str) -> Tool:
         function=search.search,
     )
 
+
+def create_read_pdf_page_tool(file_path: str) -> Tool:
+    reader = PDFReader(file_path)
+
+    return Tool(
+        name="read_pdf_page",
+        description=(
+            "Read the text content of a specific page in the PDF. "
+            "Use this tool when the user asks to read or analyze a page."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {
+                "page_number": {
+                    "type": "integer",
+                    "description": "The page number to read, starting from 1.",
+                }
+            },
+            "required": ["page_number"],
+            "additionalProperties": False,
+        },
+        function=reader.read_page_text,
+    )
+
+

@@ -6,6 +6,7 @@ from pdf_agent.llm_client import LLMClient
 from pdf_agent.tool_registry import ToolRegistry
 from pdf_agent.tools import (
     create_get_page_count_tool,
+    create_read_pdf_page_tool,
     create_search_pdf_tool,
 )
 
@@ -33,6 +34,7 @@ class PDFAgent:
         self.registry = ToolRegistry([
             create_get_page_count_tool(file_path),
             create_search_pdf_tool(file_path),
+            create_read_pdf_page_tool(file_path),
         ])
 
         # 允许外部传入 LLM，未指定时使用 Mock LLM

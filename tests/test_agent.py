@@ -8,6 +8,7 @@ from pdf_agent.tools import (
     Tool,
     create_get_page_count_tool,
     create_search_pdf_tool,
+    create_read_pdf_page_tool,
 )
 
 
@@ -328,3 +329,32 @@ def test_tool_registry_get_chat_schemas():
 
     assert schemas[0]["type"] == "function"
     assert schemas[0]["function"]["name"] == "test_tool"
+
+
+
+def test_read_pdf_page_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建包含两页文本的测试 PDF
+    document = fitz.open()
+
+    first_page = document.new_page()
+    first_page.insert_text((72, 72), "First page content.")
+
+    second_page = document.new_page()
+    second_page.insert_text((72, 72), "Second page content.")
+
+    document.save(pdf_path)
+    document.close()
+
+    tool = create_read_pdf_page_tool(pdf_path)
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "read_pdf_page"
+    assert tool.parameters["type"] == "object"
+    assert "page_number" in tool.parameters["properties"]
+
+    result = tool.function(page_number=2)
+
+    assert "Second page content." in result
+    assert "First page content." not in result
