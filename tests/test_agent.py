@@ -9,6 +9,7 @@ from pdf_agent.tools import (
     create_get_page_count_tool,
     create_search_pdf_tool,
     create_read_pdf_page_tool,
+    create_read_all_pdf_text_tool,
 )
 
 
@@ -358,3 +359,47 @@ def test_read_pdf_page_tool(tmp_path):
 
     assert "Second page content." in result
     assert "First page content." not in result
+
+
+
+def test_read_all_pdf_text_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建包含两页文本的测试 PDF
+    document = fitz.open()
+
+    first_page = document.new_page()
+    first_page.insert_text((72, 72), "First page content.")
+
+    second_page = document.new_page()
+    second_page.insert_text((72, 72), "Second page content.")
+
+    document.save(pdf_path)
+    document.close()
+
+    tool = create_read_all_pdf_text_tool(pdf_path)
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "read_all_pdf_text"
+    assert tool.parameters["type"] == "object"
+    assert tool.parameters["required"] == []
+    assert tool.parameters["additionalProperties"] is False
+
+    result = tool.function()
+
+    assert "First page content." in result
+    assert "Second page content." in result
+
+def test_agent_registers_read_all_pdf_text_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    agent = PDFAgent(str(pdf_path))
+
+    tool = agent.registry.get("read_all_pdf_text")
+
+    assert tool.name == "read_all_pdf_text"

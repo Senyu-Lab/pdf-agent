@@ -97,3 +97,22 @@ def create_read_pdf_page_tool(file_path: str) -> Tool:
     )
 
 
+def create_read_all_pdf_text_tool(file_path: str) -> Tool:
+    reader = PDFReader(file_path)
+
+    return Tool(
+        name="read_all_pdf_text",
+        description=(
+            "Read the full text content of the PDF document. "
+            "Use this tool when the user asks to summarize or analyze "
+            "the entire document."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
+        function=reader.read_all_text,
+    )
+

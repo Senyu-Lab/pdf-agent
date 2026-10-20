@@ -2,6 +2,8 @@ import argparse
 
 from pdf_agent.capabilities.pdf.reader import PDFReader
 from pdf_agent.capabilities.pdf.search import PDFSearch
+from pdf_agent.agent import PDFAgent
+from pdf_agent.groq_llm_client import GroqLLMClient
 
 
 def main():
@@ -15,9 +17,16 @@ def main():
     )
 
     parser.add_argument(
+        "--summarize",
+        action="store_true",
+        help="Summarize the PDF using an LLM.",
+    )
+
+    parser.add_argument(
         "--search",
         help="Search for a keyword in the PDF.",
     )
+
 
     args = parser.parse_args()
 
@@ -37,6 +46,21 @@ def main():
             print(f"Page {result.page_number}")
             print(result.text.strip())
             print()
+
+    if args.summarize:
+        agent = PDFAgent(
+            args.pdf,
+            llm=GroqLLMClient(),
+        )
+
+        result = agent.run(
+            "请阅读并总结这份 PDF 文档的主要内容，"
+            "提炼核心观点、重要信息和结论。"
+        )
+
+        print("\nPDF Summary")
+        print("=" * 40)
+        print(result.answer)
 
 
 if __name__ == "__main__":
