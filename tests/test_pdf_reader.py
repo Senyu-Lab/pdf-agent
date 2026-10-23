@@ -77,3 +77,37 @@ def test_invalid_pdf(tmp_path):
 
     with pytest.raises(PDFReaderError):
         reader.get_page_count()
+
+
+def test_read_pages_returns_page_content_with_page_numbers(sample_pdf):
+    reader = PDFReader(sample_pdf)
+
+    pages = reader.read_pages()
+
+    assert len(pages) == 2
+
+    assert pages[0].page_number == 1
+    assert "First page" in pages[0].text
+
+    assert pages[1].page_number == 2
+    assert "Second page" in pages[1].text
+
+
+def test_read_pages_preserves_empty_pages(tmp_path):
+    file_path = tmp_path / "empty_page.pdf"
+
+    with fitz.open() as document:
+        document.new_page()
+        document.new_page()
+        document[1].insert_text((72, 72), "Second page")
+        document.save(file_path)
+
+    reader = PDFReader(file_path)
+    pages = reader.read_pages()
+
+    assert len(pages) == 2
+    assert pages[0].page_number == 1
+    assert pages[0].text.strip() == ""
+    assert pages[1].page_number == 2
+    assert "Second page" in pages[1].text
+

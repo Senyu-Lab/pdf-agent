@@ -1,8 +1,12 @@
-
+from dataclasses import dataclass
 from pathlib import Path
 
 import fitz
 
+@dataclass
+class PDFPage:
+    page_number: int
+    text: str
 
 class PDFReaderError(Exception):
     pass
@@ -52,6 +56,16 @@ class PDFReader:
 
             page = document.load_page(page_number - 1)
             return page.get_text()
+
+    def read_pages(self) -> list[PDFPage]:
+        with self._open_document() as document:
+            return [
+                PDFPage(
+                    page_number=page_number,
+                    text=page.get_text(),
+                )
+                for page_number, page in enumerate(document, start=1)
+            ]
 
     def read_all_text(self) -> str:
         with self._open_document() as document:
