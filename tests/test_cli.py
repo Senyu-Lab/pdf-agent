@@ -106,3 +106,25 @@ def test_cli_search_pdf(tmp_path, monkeypatch, capsys):
     assert "Python is useful for data analysis." in output
     assert "Page 2" in output
     assert "Python supports automation." in output
+
+
+import pytest
+
+
+def test_cli_help(monkeypatch, capsys):
+    monkeypatch.setattr(
+        "sys.argv",
+        ["cli.py", "--help"],
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main()
+
+    assert exc_info.value.code == 0
+
+    output = capsys.readouterr().out
+
+    assert "usage:" in output.lower()
+    assert "--summarize" in output
+    assert "--search" in output
+    assert "Path to the PDF file." in output
