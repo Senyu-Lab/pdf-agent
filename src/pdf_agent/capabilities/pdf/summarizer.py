@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from typing import Callable
 
 from pdf_agent.capabilities.pdf.chunker import TextChunk
-
+from pdf_agent.capabilities.pdf.chunker import chunk_pages
+from pdf_agent.capabilities.pdf.reader import PDFPage
 
 @dataclass
 class ChunkSummary:
@@ -47,6 +48,22 @@ def summarize_chunks(
 
     return summaries
 
+def reduce_summaries(
+        summaries: list[ChunkSummary],
+        combine_func: Callable[[str], str],
+) -> str:
+    if not summaries:
+        raise ValueError("Cannot reduce an empty list of summaries.")
+
+    # 保留每段摘要的来源页码，方便追溯原文
+    parts = [
+        f"Pages {item.start_page}-{item.end_page}:\n{item.summary}"
+        for item in summaries
+    ]
+
+    combined_text = "\n\n".join(parts)
+
+    return combine_func(combined_text)
 
 
 class ChunkSummaryError(Exception):
@@ -64,3 +81,28 @@ class ChunkSummaryError(Exception):
         super().__init__(
             f"Failed to summarize pages {start_page}-{end_page}: {cause}"
         )
+
+
+
+def summarize_document(
+    pages: list[PDFPage],
+    summarize_func: Callable[[TextChunk], str],
+    combine_func: Callable[[str], str],
+    max_chars: int = 4000,
+    max_retries: int = 2,
+) -> str:
+    # 第一步：将页面文本切分成多个文本块
+    chunks = chunk_pages(pages, max_chars=max_chars)
+
+    if not chunks:
+        raise ValueError("Cannot summarize a document with no text.")
+
+    # 第二步：逐块生成摘要
+    summaries = summarize_chunks(
+        chunks,
+        summarize_func,
+        max_retries=max_retries,
+    )
+
+    # 第三步：合并所有局部摘要
+    return reduce_summaries(summaries, combine_func)
