@@ -81,3 +81,23 @@ class GroqLLMClient:
             raise ValueError("LLM did not return a text answer.")
 
         return answer
+
+
+    def generate_text(self, prompt: str) -> str:
+        # 根据提示词调用模型生成文本
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0,
+        )
+
+        result = response.choices[0].message.content
+
+        # 防止模型没有返回文本
+        if result is None:
+            raise ValueError("LLM did not return a text answer.")
+
+        return result
+

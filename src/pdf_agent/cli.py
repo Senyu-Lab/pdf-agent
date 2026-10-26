@@ -4,6 +4,11 @@ from pdf_agent.capabilities.pdf.reader import PDFReader
 from pdf_agent.capabilities.pdf.search import PDFSearch
 from pdf_agent.agent import PDFAgent
 from pdf_agent.groq_llm_client import GroqLLMClient
+from pdf_agent.capabilities.pdf.summarizer import summarize_document
+from pdf_agent.capabilities.pdf.llm_summarizer import (
+    summarize_chunk_with_llm,
+    combine_summaries_with_llm,
+)
 
 
 def main():
@@ -47,20 +52,25 @@ def main():
             print(result.text.strip())
             print()
 
-    if args.summarize:
-        agent = PDFAgent(
-            args.pdf,
-            llm=GroqLLMClient(),
-        )
 
-        result = agent.run(
-            "请阅读并总结这份 PDF 文档的主要内容，"
-            "提炼核心观点、重要信息和结论。"
+    if args.summarize:
+        llm = GroqLLMClient()
+        pages = reader.read_pages()
+
+        result = summarize_document(
+            pages=pages,
+            summarize_func=lambda chunk: summarize_chunk_with_llm(
+                llm, chunk
+            ),
+            combine_func=lambda text: combine_summaries_with_llm(
+                llm, text
+            ),
         )
 
         print("\nPDF Summary")
         print("=" * 40)
-        print(result.answer)
+        print(result)
+
 
 
 if __name__ == "__main__":

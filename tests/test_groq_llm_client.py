@@ -110,3 +110,27 @@ def test_generate_answer_raises_when_content_is_none(client):
             tool_name="search_pdf",
             tool_result={},
         )
+
+
+def test_generate_text_returns_model_response(client):
+    llm, mock_api = client
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "这是一段测试摘要。"
+    mock_api.chat.completions.create.return_value = mock_response
+
+    result = llm.generate_text("请总结这段文本。")
+
+    assert result == "这是一段测试摘要。"
+    mock_api.chat.completions.create.assert_called_once()
+
+
+def test_generate_text_raises_when_content_is_none(client):
+    llm, mock_api = client
+
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = None
+    mock_api.chat.completions.create.return_value = mock_response
+
+    with pytest.raises(ValueError, match="LLM did not return a text answer"):
+        llm.generate_text("请总结这段文本。")
