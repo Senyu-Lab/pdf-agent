@@ -73,3 +73,61 @@ def test_summarize_chunks_reports_page_range_when_summary_fails():
     assert exc_info.value.start_page == 3
     assert exc_info.value.end_page == 4
     assert "Simulated LLM failure" in str(exc_info.value)
+
+
+def test_summarize_chunks_retries_after_temporary_failure():
+    chunks = [
+        TextChunk(
+            text="Section content",
+            start_page=1,
+            end_page=2,
+        ),
+    ]
+    attempts = 0
+
+    def flaky_summarize(chunk):
+        nonlocal attempts
+        attempts += 1
+
+        if attempts < 3:
+            raise RuntimeError("Temporary failure")
+
+        return f"Summary: {chunk.text}"
+
+    summaries = summarize_chunks(
+        chunks,
+        flaky_summarize,
+        max_retries=2,
+    )
+
+    assert attempts == 3
+    assert len(summaries) == 1
+    assert summaries[0].summary == "Summary: Section content"
+
+
+def test_summarize_chunks_fails_after_retries_are_exhausted():
+    chunks = [
+        TextChunk(
+            text="Section content",
+            start_page=5,
+            end_page=6,
+        ),
+    ]
+    attempts = 0
+
+    def always_fails(chunk):
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError("Persistent failure")
+
+    with pytest.raises(ChunkSummaryError) as exc_info:
+        summarize_chunks(
+            chunks,
+            always_fails,
+            max_retries=2,
+        )
+
+    assert attempts == 3
+    assert exc_info.value.start_page == 5
+    assert exc_info.value.end_page == 6
+    assert "Persistent failure" in str(exc_info.value)
