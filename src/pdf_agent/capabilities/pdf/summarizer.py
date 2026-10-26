@@ -20,7 +20,14 @@ def summarize_chunks(
     summaries: list[ChunkSummary] = []
 
     for chunk in chunks:
-        summary = summarize_func(chunk)
+        try:
+            summary = summarize_func(chunk)
+        except Exception as error:
+            raise ChunkSummaryError(
+                start_page=chunk.start_page,
+                end_page=chunk.end_page,
+                cause=error,
+            ) from error
 
         summaries.append(
             ChunkSummary(
@@ -31,3 +38,20 @@ def summarize_chunks(
         )
 
     return summaries
+
+
+class ChunkSummaryError(Exception):
+    # 记录摘要失败的页码范围和原始异常
+    def __init__(
+        self,
+        start_page: int,
+        end_page: int,
+        cause: Exception,
+    ):
+        self.start_page = start_page
+        self.end_page = end_page
+        self.cause = cause
+
+        super().__init__(
+            f"Failed to summarize pages {start_page}-{end_page}: {cause}"
+        )
