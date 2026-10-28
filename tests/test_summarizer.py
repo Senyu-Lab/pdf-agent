@@ -3,9 +3,9 @@ from pdf_agent.capabilities.pdf.chunker import TextChunk
 from pdf_agent.capabilities.pdf.reader import PDFPage
 from pdf_agent.capabilities.pdf.summarizer import (
     ChunkSummary,
-    summarize_chunks,
     ChunkSummaryError,
     reduce_summaries,
+    summarize_chunks,
     summarize_document,
 )
 

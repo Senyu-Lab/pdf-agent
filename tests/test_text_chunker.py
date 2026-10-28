@@ -1,8 +1,8 @@
 
 import pytest
 
-from pdf_agent.capabilities.pdf.reader import PDFPage
 from pdf_agent.capabilities.pdf.chunker import chunk_pages
+from pdf_agent.capabilities.pdf.reader import PDFPage
 
 
 def test_chunk_pages_combines_pages_within_character_limit():

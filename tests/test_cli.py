@@ -3,7 +3,6 @@ import fitz
 from pdf_agent import cli
 
 
-
 def test_cli_summarize_pdf(tmp_path, monkeypatch, capsys):
     from pdf_agent import cli
     from pdf_agent.capabilities.pdf.reader import PDFPage

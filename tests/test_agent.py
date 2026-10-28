@@ -7,9 +7,9 @@ from pdf_agent.tool_registry import ToolRegistry
 from pdf_agent.tools import (
     Tool,
     create_get_page_count_tool,
-    create_search_pdf_tool,
-    create_read_pdf_page_tool,
     create_read_all_pdf_text_tool,
+    create_read_pdf_page_tool,
+    create_search_pdf_tool,
 )
 
 

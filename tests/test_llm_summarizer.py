@@ -3,12 +3,11 @@ from unittest.mock import Mock
 
 from pdf_agent.capabilities.pdf.chunker import TextChunk
 from pdf_agent.capabilities.pdf.llm_summarizer import (
-    summarize_chunk_with_llm,
     combine_summaries_with_llm,
+    summarize_chunk_with_llm,
 )
 from pdf_agent.capabilities.pdf.reader import PDFPage
 from pdf_agent.capabilities.pdf.summarizer import summarize_document
-
 
 
 def test_summarize_chunk_with_llm():

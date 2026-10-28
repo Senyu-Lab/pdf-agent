@@ -1,10 +1,10 @@
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
-from pdf_agent.capabilities.pdf.chunker import TextChunk
-from pdf_agent.capabilities.pdf.chunker import chunk_pages
+from pdf_agent.capabilities.pdf.chunker import TextChunk, chunk_pages
 from pdf_agent.capabilities.pdf.reader import PDFPage
+
 
 @dataclass
 class ChunkSummary:

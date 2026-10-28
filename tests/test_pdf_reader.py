@@ -2,9 +2,9 @@ import fitz
 import pytest
 
 from pdf_agent.capabilities.pdf.reader import (
+    PageNumberOutOfRangeError,
     PDFReader,
     PDFReaderError,
-    PageNumberOutOfRangeError,
 )
 
 

@@ -3,6 +3,7 @@ from pathlib import Path
 
 import fitz
 
+
 @dataclass
 class PDFPage:
     page_number: int

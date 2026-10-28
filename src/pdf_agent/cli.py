@@ -1,14 +1,13 @@
 import argparse
 
+from pdf_agent.capabilities.pdf.llm_summarizer import (
+    combine_summaries_with_llm,
+    summarize_chunk_with_llm,
+)
 from pdf_agent.capabilities.pdf.reader import PDFReader
 from pdf_agent.capabilities.pdf.search import PDFSearch
-from pdf_agent.agent import PDFAgent
-from pdf_agent.groq_llm_client import GroqLLMClient
 from pdf_agent.capabilities.pdf.summarizer import summarize_document
-from pdf_agent.capabilities.pdf.llm_summarizer import (
-    summarize_chunk_with_llm,
-    combine_summaries_with_llm,
-)
+from pdf_agent.groq_llm_client import GroqLLMClient
 
 
 def main():
