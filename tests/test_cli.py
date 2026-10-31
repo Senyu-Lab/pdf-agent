@@ -201,7 +201,12 @@ def test_cli_summarize_uses_chunked_pipeline(
         fake_summarize_document,
         raising=False,
     )
-    monkeypatch.setattr(cli, "PDFAgent", unexpected_agent)
+    monkeypatch.setattr(
+        cli,
+        "PDFAgent",
+        unexpected_agent,
+        raising=False,
+    )
     monkeypatch.setattr(
         "sys.argv",
         ["cli.py", str(pdf_path), "--summarize"],

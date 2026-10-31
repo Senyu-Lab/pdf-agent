@@ -1,4 +1,5 @@
 import json
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,54 +15,26 @@ class ToolCall:
     arguments: dict[str, Any]
 
 
-class LLMClient:
+class LLMClient(ABC):
     tool_schema_format = "responses"
 
-    def __init__(self):
-        # OpenAI SDK 会自动读取 OPENAI_API_KEY 环境变量
-        self.client = OpenAI()
-
+    @abstractmethod
     def chat(
         self,
         messages: list[dict[str, str]],
         tools: list[dict[str, Any]],
     ) -> ToolCall:
-        # 调用 OpenAI Responses API，让模型决定使用哪个 Tool
-        response = self.client.responses.create(
-            model="gpt-5-mini",
-            input=messages,
-            tools=tools,
-        )
+        pass
 
-        # 查找模型返回的 function call
-        for item in response.output:
-            if item.type == "function_call":
-                return ToolCall(
-                    tool_name=item.name,
-                    arguments=json.loads(item.arguments),
-                )
-
-        raise ValueError("LLM did not return a tool call.")
-
+    @abstractmethod
     def generate_answer(
         self,
         messages: list[dict[str, str]],
         tool_name: str,
         tool_result: Any,
     ) -> str:
-        # 将 Tool Result 转换为最终用户回答
-        response = self.client.responses.create(
-            model="gpt-5-mini",
-            input=[
-                *messages,
-                {
-                    "role": "developer",
-                    "content": (
-                        f"The tool '{tool_name}' was executed "
-                        f"and returned this result: {tool_result}"
-                    ),
-                },
-            ],
-        )
+        pass
 
-        return response.output_text
+    @abstractmethod
+    def generate_text(self, prompt: str) -> str:
+        pass

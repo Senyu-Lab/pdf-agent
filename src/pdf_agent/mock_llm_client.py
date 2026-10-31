@@ -59,3 +59,7 @@ class MockLLMClient(LLMClient):
         raise ValueError(
             f"Unsupported tool result: {tool_name}"
         )
+
+    def generate_text(self, prompt: str) -> str:
+        # 模拟通用文本生成
+        return f"Mock generated text for: {prompt}"
