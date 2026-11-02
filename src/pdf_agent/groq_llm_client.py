@@ -4,10 +4,10 @@ from typing import Any
 
 from groq import Groq
 
-from pdf_agent.llm_client import ToolCall
+from pdf_agent.llm_client import LLMClient, ToolCall
 
 
-class GroqLLMClient:
+class GroqLLMClient(LLMClient):
     # Groq Chat Completions API 使用的 Tool Schema 格式
     tool_schema_format = "chat_completions"
 

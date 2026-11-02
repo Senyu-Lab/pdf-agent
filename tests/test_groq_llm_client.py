@@ -134,3 +134,13 @@ def test_generate_text_raises_when_content_is_none(client):
 
     with pytest.raises(ValueError, match="LLM did not return a text answer"):
         llm.generate_text("请总结这段文本。")
+
+
+from pdf_agent.llm_client import LLMClient
+
+
+def test_groq_client_implements_llm_client():
+    with patch("pdf_agent.groq_llm_client.Groq"):
+        client = GroqLLMClient()
+
+    assert isinstance(client, LLMClient)
