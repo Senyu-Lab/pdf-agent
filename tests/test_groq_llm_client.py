@@ -96,6 +96,28 @@ def test_generate_answer_returns_text(client):
     assert result == "找到了 Python 相关内容。"
     mock_api.chat.completions.create.assert_called_once()
 
+    mock_api.chat.completions.create.assert_called_once_with(
+        model=llm.model,
+        messages=[
+            {"role": "user", "content": "搜索 Python"},
+            {
+                "role": "assistant",
+                "content": (
+                    "Tool 'search_pdf' returned this result: "
+                    '{"matches": ["Python"]}'
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "请根据上面的工具执行结果，直接回答我最初的问题。"
+                    "如果结果为空，请如实说明没有找到相关内容。"
+                ),
+            },
+        ],
+        temperature=0,
+    )
+
 
 def test_generate_answer_raises_when_content_is_none(client):
     llm, mock_api = client
