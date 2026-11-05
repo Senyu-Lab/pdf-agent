@@ -144,3 +144,40 @@ def test_groq_client_implements_llm_client():
         client = GroqLLMClient()
 
     assert isinstance(client, LLMClient)
+
+def test_groq_client_uses_configured_model_and_tool_schema_format():
+    with patch("pdf_agent.groq_llm_client.Groq"):
+        client = GroqLLMClient(model="llama-3.3-70b-versatile")
+
+    assert client.model == "llama-3.3-70b-versatile"
+    assert client.tool_schema_format == "chat_completions"
+
+def test_chat_sends_expected_api_parameters():
+    with patch("pdf_agent.groq_llm_client.Groq") as mock_groq:
+        client = GroqLLMClient(model="test-model")
+
+        mock_groq.return_value.chat.completions.create.return_value.choices = [
+            MagicMock(
+                message=MagicMock(
+                    tool_calls=[
+                        MagicMock(
+                            function=MagicMock(
+                                name="search_pdf",
+                                arguments='{"query": "test"}',
+                            )
+                        )
+                    ]
+                )
+            )
+        ]
+
+        client.chat(messages=[], tools=[])
+
+    mock_groq.return_value.chat.completions.create.assert_called_once_with(
+        model="test-model",
+        messages=[],
+        tools=[],
+        tool_choice="auto",
+        temperature=0,
+    )
+
