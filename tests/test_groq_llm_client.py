@@ -181,3 +181,27 @@ def test_chat_sends_expected_api_parameters():
         temperature=0,
     )
 
+def test_chat_returns_only_first_tool_call():
+    with patch("pdf_agent.groq_llm_client.Groq"):
+        client = GroqLLMClient()
+
+    first_call = MagicMock()
+    first_call.function.name = "search_pdf"
+    first_call.function.arguments = '{"query": "first"}'
+
+    second_call = MagicMock()
+    second_call.function.name = "summarize_pdf"
+    second_call.function.arguments = '{"query": "second"}'
+
+    response = MagicMock()
+    response.choices[0].message.tool_calls = [
+        first_call,
+        second_call,
+    ]
+
+    client.client.chat.completions.create.return_value = response
+
+    result = client.chat(messages=[], tools=[])
+
+    assert result.tool_name == "search_pdf"
+    assert result.arguments == {"query": "first"}
