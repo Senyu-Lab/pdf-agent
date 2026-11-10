@@ -1,5 +1,6 @@
 import fitz
 
+from unittest.mock import Mock
 from pdf_agent.agent import AgentResult, PDFAgent
 from pdf_agent.llm_client import ToolCall
 from pdf_agent.mock_llm_client import MockLLMClient
@@ -10,6 +11,7 @@ from pdf_agent.tools import (
     create_read_all_pdf_text_tool,
     create_read_pdf_page_tool,
     create_search_pdf_tool,
+    create_summarize_pdf_tool,
 )
 
 
@@ -403,3 +405,32 @@ def test_agent_registers_read_all_pdf_text_tool(tmp_path):
     tool = agent.registry.get("read_all_pdf_text")
 
     assert tool.name == "read_all_pdf_text"
+
+def test_summarize_pdf_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+
+    first_page = document.new_page()
+    first_page.insert_text((72, 72), "Python is a programming language.")
+
+    second_page = document.new_page()
+    second_page.insert_text((72, 72), "Python supports data analysis.")
+
+    document.save(pdf_path)
+    document.close()
+
+    llm = Mock()
+    llm.generate_text.side_effect = [
+        "Python is a programming language.",
+        "This document introduces Python and data analysis.",
+    ]
+
+    tool = create_summarize_pdf_tool(pdf_path, llm)
+
+    result = tool.function()
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "summarize_pdf"
+    assert result == "This document introduces Python and data analysis."
+    assert llm.generate_text.call_count == 2

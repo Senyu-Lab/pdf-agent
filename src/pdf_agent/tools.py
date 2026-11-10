@@ -4,7 +4,11 @@ from typing import Any
 
 from pdf_agent.capabilities.pdf.reader import PDFReader
 from pdf_agent.capabilities.pdf.search import PDFSearch
-
+from pdf_agent.capabilities.pdf.llm_summarizer import (
+    combine_summaries_with_llm,
+    summarize_chunk_with_llm,
+)
+from pdf_agent.capabilities.pdf.summarizer import summarize_document
 
 @dataclass
 class Tool:
@@ -118,3 +122,33 @@ def create_read_all_pdf_text_tool(file_path: str) -> Tool:
         function=reader.read_all_text,
     )
 
+def create_summarize_pdf_tool(file_path: str, llm) -> Tool:
+    reader = PDFReader(file_path)
+
+    def summarize():
+        pages = reader.read_pages()
+
+        return summarize_document(
+            pages=pages,
+            summarize_func=lambda chunk: summarize_chunk_with_llm(
+                llm, chunk
+            ),
+            combine_func=lambda summaries_text: combine_summaries_with_llm(
+                llm, summaries_text
+            ),
+        )
+
+    return Tool(
+        name="summarize_pdf",
+        description=(
+            "Summarize the entire PDF document. "
+            "Use this tool when the user asks for a document summary."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
+        function=summarize,
+    )
