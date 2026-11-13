@@ -58,6 +58,24 @@ def create_get_page_count_tool(file_path: str) -> Tool:
         function=reader.get_page_count,
     )
 
+def create_extract_pdf_metadata_tool(file_path: str) -> Tool:
+    reader = PDFReader(file_path)
+
+    return Tool(
+        name="extract_pdf_metadata",
+        description=(
+            "Extract metadata from the PDF, including title, author, "
+            "subject, creator, producer, creation date, modification "
+            "date, and page count."
+        ),
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": False,
+        },
+        function=reader.get_metadata,
+    )
 
 def create_search_pdf_tool(file_path: str) -> Tool:
     search = PDFSearch(file_path)

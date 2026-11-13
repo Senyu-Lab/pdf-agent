@@ -43,6 +43,21 @@ class PDFReader:
         with self._open_document() as document:
             return document.page_count
 
+    def get_metadata(self) -> dict[str, str | int]:
+        with self._open_document() as document:
+            metadata = document.metadata or {}
+
+            return {
+                "title": metadata.get("title") or "",
+                "author": metadata.get("author") or "",
+                "subject": metadata.get("subject") or "",
+                "creator": metadata.get("creator") or "",
+                "producer": metadata.get("producer") or "",
+                "creation_date": metadata.get("creationDate") or "",
+                "modification_date": metadata.get("modDate") or "",
+                "page_count": document.page_count,
+            }
+
     def read_page_text(self, page_number: int) -> str:
         if isinstance(page_number, bool) or not isinstance(
             page_number, int

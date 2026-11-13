@@ -1,5 +1,6 @@
 import fitz
 
+from pdf_agent.capabilities.pdf.reader import PDFReader
 from unittest.mock import Mock
 from pdf_agent.agent import AgentResult, PDFAgent
 from pdf_agent.llm_client import ToolCall
@@ -12,6 +13,7 @@ from pdf_agent.tools import (
     create_read_pdf_page_tool,
     create_search_pdf_tool,
     create_summarize_pdf_tool,
+    create_extract_pdf_metadata_tool,
 )
 
 
@@ -205,6 +207,42 @@ def test_get_page_count_tool(tmp_path):
     assert tool.parameters["type"] == "object"
     assert tool.function() == 3
 
+def test_extract_pdf_metadata_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建包含元数据的测试 PDF
+    document = fitz.open()
+    document.set_metadata({
+        "title": "PDF Agent Test",
+        "author": "Senyu",
+        "subject": "Metadata testing",
+    })
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    tool = create_extract_pdf_metadata_tool(pdf_path)
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "extract_pdf_metadata"
+    assert tool.parameters["type"] == "object"
+    assert tool.parameters["required"] == []
+    assert tool.parameters["additionalProperties"] is False
+
+    result = tool.function()
+
+    assert result["title"] == "PDF Agent Test"
+    assert result["author"] == "Senyu"
+    assert result["subject"] == "Metadata testing"
+    assert result["page_count"] == 1
+
+    schema = tool.to_schema()
+    assert schema["name"] == "extract_pdf_metadata"
+    assert schema["parameters"]["properties"] == {}
+    assert schema["parameters"]["required"] == []
+
+    chat_schema = tool.to_chat_schema()
+    assert chat_schema["function"]["name"] == "extract_pdf_metadata"
 
 def test_search_pdf_tool(tmp_path):
     pdf_path = tmp_path / "sample.pdf"
@@ -465,6 +503,20 @@ def test_agent_registers_summarize_pdf_tool(tmp_path):
 
     assert tool.name == "summarize_pdf"
 
+def test_agent_registers_extract_pdf_metadata_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    agent = PDFAgent(str(pdf_path))
+
+    tool = agent.registry.get("extract_pdf_metadata")
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "extract_pdf_metadata"
 
 def test_agent_can_summarize_pdf(tmp_path):
     pdf_path = tmp_path / "sample.pdf"
@@ -520,3 +572,57 @@ def test_agent_can_summarize_pdf(tmp_path):
     llm.chat.assert_called_once()
     llm.generate_text.assert_called()
     llm.generate_answer.assert_called_once()
+
+def test_pdf_reader_get_metadata(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建包含元数据的测试 PDF
+    document = fitz.open()
+
+    document.set_metadata({
+        "title": "PDF Agent Test",
+        "author": "Senyu",
+        "subject": "PDF metadata testing",
+        "creator": "PyCharm",
+        "producer": "PyMuPDF",
+        "creationDate": "D:20261113000000",
+        "modDate": "D:20261113010000",
+    })
+
+    document.new_page()
+    document.new_page()
+
+    document.save(pdf_path)
+    document.close()
+
+    reader = PDFReader(pdf_path)
+
+    metadata = reader.get_metadata()
+
+    assert metadata["title"] == "PDF Agent Test"
+    assert metadata["author"] == "Senyu"
+    assert metadata["subject"] == "PDF metadata testing"
+    assert metadata["creator"] == "PyCharm"
+    assert metadata["producer"] == "PyMuPDF"
+    assert metadata["page_count"] == 2
+
+def test_pdf_reader_get_metadata_with_empty_fields(tmp_path):
+    pdf_path = tmp_path / "empty_metadata.pdf"
+
+    document = fitz.open()
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    reader = PDFReader(pdf_path)
+
+    metadata = reader.get_metadata()
+
+    assert metadata["title"] == ""
+    assert metadata["author"] == ""
+    assert metadata["subject"] == ""
+    assert metadata["creator"] == ""
+    assert metadata["producer"] == ""
+    assert metadata["creation_date"] == ""
+    assert metadata["modification_date"] == ""
+    assert metadata["page_count"] == 1
