@@ -12,6 +12,15 @@ class MockLLMClient(LLMClient):
         # Mock LLM 根据问题模拟 Tool Selection
         question = messages[-1]["content"]
 
+        # Mock LLM 根据问题模拟 Tool Selection
+        question = messages[-1]["content"]
+
+        if "总结" in question or "概括" in question:
+            return ToolCall(
+                tool_name="summarize_pdf",
+                arguments={},
+            )
+
         if "多少页" in question or "几页" in question:
             return ToolCall(
                 tool_name="get_page_count",

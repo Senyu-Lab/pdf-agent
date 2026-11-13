@@ -86,6 +86,24 @@ def test_llm_client_returns_page_count_tool_call():
     assert result.arguments == {}
 
 
+def test_llm_client_selects_summarize_tool():
+    client = MockLLMClient()
+
+    result = client.chat(
+        messages=[
+            {
+                "role": "user",
+                "content": "请总结这份 PDF。",
+            }
+        ],
+        tools=[],
+    )
+
+    assert isinstance(result, ToolCall)
+    assert result.tool_name == "summarize_pdf"
+    assert result.arguments == {}
+
+
 def test_llm_client_selects_search_tool():
     client = MockLLMClient()
 
@@ -434,3 +452,71 @@ def test_summarize_pdf_tool(tmp_path):
     assert tool.name == "summarize_pdf"
     assert result == "This document introduces Python and data analysis."
     assert llm.generate_text.call_count == 2
+
+def test_agent_registers_summarize_pdf_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+    document = fitz.open()
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    agent = PDFAgent(str(pdf_path))
+    tool = agent.registry.get("summarize_pdf")
+
+    assert tool.name == "summarize_pdf"
+
+
+def test_agent_can_summarize_pdf(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    # 创建包含两页文本的测试 PDF
+    document = fitz.open()
+
+    first_page = document.new_page()
+    first_page.insert_text(
+        (72, 72),
+        "Python is a programming language.",
+    )
+
+    second_page = document.new_page()
+    second_page.insert_text(
+        (72, 72),
+        "Python supports data analysis.",
+    )
+
+    document.save(pdf_path)
+    document.close()
+
+    llm = Mock()
+
+    llm.tool_schema_format = "responses"
+    llm.chat.return_value = ToolCall(
+        tool_name="summarize_pdf",
+        arguments={},
+    )
+
+    llm.generate_text.side_effect = [
+        "Python is a programming language.",
+        "This document introduces Python and data analysis.",
+    ]
+
+    llm.generate_answer.return_value = (
+        "这份文档介绍了 Python 编程语言及其数据分析应用。"
+    )
+
+    agent = PDFAgent(str(pdf_path), llm=llm)
+
+    result = agent.run("请总结这份 PDF。")
+
+    assert isinstance(result, AgentResult)
+    assert result.tool_name == "summarize_pdf"
+    assert result.tool_result == (
+        "This document introduces Python and data analysis."
+    )
+    assert result.answer == (
+        "这份文档介绍了 Python 编程语言及其数据分析应用。"
+    )
+
+    llm.chat.assert_called_once()
+    llm.generate_text.assert_called()
+    llm.generate_answer.assert_called_once()

@@ -9,6 +9,7 @@ from pdf_agent.tools import (
     create_read_all_pdf_text_tool,
     create_read_pdf_page_tool,
     create_search_pdf_tool,
+    create_summarize_pdf_tool,
 )
 
 
@@ -32,11 +33,15 @@ class PDFAgent:
     ):
         self.file_path = file_path
 
+        # 允许外部传入 LLM，未指定时使用 Mock LLM
+        self.llm = llm or MockLLMClient()
+
         self.registry = ToolRegistry([
             create_get_page_count_tool(file_path),
             create_search_pdf_tool(file_path),
             create_read_pdf_page_tool(file_path),
             create_read_all_pdf_text_tool(file_path),
+            create_summarize_pdf_tool(file_path, self.llm),
         ])
 
         # 允许外部传入 LLM，未指定时使用 Mock LLM
