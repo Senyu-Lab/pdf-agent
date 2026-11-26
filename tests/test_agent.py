@@ -626,3 +626,27 @@ def test_pdf_reader_get_metadata_with_empty_fields(tmp_path):
     assert metadata["creation_date"] == ""
     assert metadata["modification_date"] == ""
     assert metadata["page_count"] == 1
+
+def test_pdf_reader_read_page_range(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+
+    for text in ["First page", "Second page", "Third page"]:
+        page = document.new_page()
+        page.insert_text((72, 72), text)
+
+    document.save(pdf_path)
+    document.close()
+
+    reader = PDFReader(pdf_path)
+
+    pages = reader.read_page_range(2, 3)
+
+    assert len(pages) == 2
+
+    assert pages[0].page_number == 2
+    assert pages[0].text.strip() == "Second page"
+
+    assert pages[1].page_number == 3
+    assert pages[1].text.strip() == "Third page"

@@ -73,6 +73,39 @@ class PDFReader:
             page = document.load_page(page_number - 1)
             return page.get_text()
 
+    def read_page_range(
+            self,
+            start_page: int,
+            end_page: int,
+    ) -> list[PDFPage]:
+        if (
+                isinstance(start_page, bool)
+                or not isinstance(start_page, int)
+                or isinstance(end_page, bool)
+                or not isinstance(end_page, int)
+        ):
+            raise TypeError("Page numbers must be integers.")
+
+        with self._open_document() as document:
+            if (
+                    start_page < 1
+                    or end_page > document.page_count
+                    or start_page > end_page
+            ):
+                raise PageNumberOutOfRangeError(
+                    f"Page range must be between 1 and "
+                    f"{document.page_count}, with start_page "
+                    f"less than or equal to end_page."
+                )
+
+            return [
+                PDFPage(
+                    page_number=page_number,
+                    text=document.load_page(page_number - 1).get_text(),
+                )
+                for page_number in range(start_page, end_page + 1)
+            ]
+
     def read_pages(self) -> list[PDFPage]:
         with self._open_document() as document:
             return [
