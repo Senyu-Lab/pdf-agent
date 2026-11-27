@@ -1,5 +1,10 @@
 import fitz
+import pytest
 
+from pdf_agent.capabilities.pdf.reader import (
+    PDFReader,
+    PageNumberOutOfRangeError,
+)
 from pdf_agent.capabilities.pdf.reader import PDFReader
 from unittest.mock import Mock
 from pdf_agent.agent import AgentResult, PDFAgent
@@ -650,3 +655,29 @@ def test_pdf_reader_read_page_range(tmp_path):
 
     assert pages[1].page_number == 3
     assert pages[1].text.strip() == "Third page"
+
+@pytest.mark.parametrize(
+    ("start_page", "end_page"),
+    [
+        (0, 2),   # 起始页小于 1
+        (1, 4),   # 结束页超过总页数
+        (3, 2),   # 起始页大于结束页
+    ],
+)
+def test_pdf_reader_read_page_range_out_of_range(
+    tmp_path,
+    start_page,
+    end_page,
+):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+    for _ in range(3):
+        document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    reader = PDFReader(pdf_path)
+
+    with pytest.raises(PageNumberOutOfRangeError):
+        reader.read_page_range(start_page, end_page)
