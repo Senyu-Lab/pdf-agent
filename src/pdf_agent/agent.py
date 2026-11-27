@@ -11,6 +11,7 @@ from pdf_agent.tools import (
     create_search_pdf_tool,
     create_summarize_pdf_tool,
     create_extract_pdf_metadata_tool,
+    create_get_page_range_text_tool,
 )
 
 
@@ -44,6 +45,8 @@ class PDFAgent:
             create_read_all_pdf_text_tool(file_path),
             create_summarize_pdf_tool(file_path, self.llm),
             create_extract_pdf_metadata_tool(file_path),
+            create_get_page_range_text_tool(file_path)
+
         ])
 
         # 允许外部传入 LLM，未指定时使用 Mock LLM

@@ -19,6 +19,7 @@ from pdf_agent.tools import (
     create_search_pdf_tool,
     create_summarize_pdf_tool,
     create_extract_pdf_metadata_tool,
+    create_get_page_range_text_tool,
 )
 
 
@@ -394,7 +395,30 @@ def test_tool_registry_get_chat_schemas():
     assert schemas[0]["type"] == "function"
     assert schemas[0]["function"]["name"] == "test_tool"
 
+def test_get_page_range_text_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
 
+    document = fitz.open()
+    for text in ["First page", "Second page", "Third page"]:
+        page = document.new_page()
+        page.insert_text((72, 72), text)
+
+    document.save(pdf_path)
+    document.close()
+
+    tool = create_get_page_range_text_tool(pdf_path)
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "get_page_range_text"
+    assert tool.parameters["required"] == ["start_page", "end_page"]
+
+    result = tool.function(start_page=2, end_page=3)
+
+    assert len(result) == 2
+    assert result[0]["page_number"] == 2
+    assert result[0]["text"].strip() == "Second page"
+    assert result[1]["page_number"] == 3
+    assert result[1]["text"].strip() == "Third page"
 
 def test_read_pdf_page_tool(tmp_path):
     pdf_path = tmp_path / "sample.pdf"
@@ -681,3 +705,18 @@ def test_pdf_reader_read_page_range_out_of_range(
 
     with pytest.raises(PageNumberOutOfRangeError):
         reader.read_page_range(start_page, end_page)
+
+def test_agent_registers_get_page_range_text_tool(tmp_path):
+    pdf_path = tmp_path / "sample.pdf"
+
+    document = fitz.open()
+    document.new_page()
+    document.save(pdf_path)
+    document.close()
+
+    agent = PDFAgent(str(pdf_path))
+
+    tool = agent.registry.get("get_page_range_text")
+
+    assert isinstance(tool, Tool)
+    assert tool.name == "get_page_range_text"

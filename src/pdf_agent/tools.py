@@ -170,3 +170,41 @@ def create_summarize_pdf_tool(file_path: str, llm) -> Tool:
         },
         function=summarize,
     )
+
+def create_get_page_range_text_tool(file_path: str) -> Tool:
+    reader = PDFReader(file_path)
+
+    def get_page_range_text(
+        start_page: int,
+        end_page: int,
+    ) -> list[dict]:
+        pages = reader.read_page_range(start_page, end_page)
+
+        return [
+            {
+                "page_number": page.page_number,
+                "text": page.text,
+            }
+            for page in pages
+        ]
+
+    return Tool(
+        name="get_page_range_text",
+        description="Read text from an inclusive PDF page range.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "start_page": {
+                    "type": "integer",
+                    "description": "First page to read (1-based).",
+                },
+                "end_page": {
+                    "type": "integer",
+                    "description": "Last page to read (inclusive).",
+                },
+            },
+            "required": ["start_page", "end_page"],
+            "additionalProperties": False,
+        },
+        function=get_page_range_text,
+    )
